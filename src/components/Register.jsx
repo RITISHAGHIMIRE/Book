@@ -1,18 +1,98 @@
-// 📁 Register.jsx
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FaUser, FaLock, FaGoogle, FaEnvelope, FaUserCircle } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios'; // You'll need to install axios
+import { toast } from 'react-toastify'; // For notifications
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const Register = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    agreeTerms: false
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = 'You must agree to the terms';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Registration submitted:', { name, email, password });
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Replace with your actual API endpoint
+      const response = await axios.post('https://your-api-endpoint.com/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
+      
+      toast.success('Registration successful!');
+      navigate('/login'); // Redirect to login after successful registration
+    } catch (error) {
+      let errorMessage = 'Registration failed';
+      if (error.response) {
+        // Handle different error statuses
+        if (error.response.status === 409) {
+          errorMessage = 'Email already exists';
+        } else {
+          errorMessage = error.response.data.message || errorMessage;
+        }
+      }
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignUp = () => {
+    // Implement Google OAuth integration here
+    console.log('Google sign up clicked');
   };
 
   return (
@@ -24,232 +104,115 @@ const Register = () => {
         <AuthTitle>Create Your Account</AuthTitle>
         
         <AuthForm onSubmit={handleSubmit}>
-          <InputGroup>
+          <InputGroup error={errors.name}>
             <InputIcon>
               <FaUser />
             </InputIcon>
             <Input 
               type="text" 
+              name="name"
               placeholder="Full Name" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              value={formData.name}
+              onChange={handleChange}
             />
+            {errors.name && <ErrorText>{errors.name}</ErrorText>}
           </InputGroup>
           
-          <InputGroup>
+          <InputGroup error={errors.email}>
             <InputIcon>
               <FaEnvelope />
             </InputIcon>
             <Input 
               type="email" 
+              name="email"
               placeholder="Email Address" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              value={formData.email}
+              onChange={handleChange}
             />
+            {errors.email && <ErrorText>{errors.email}</ErrorText>}
           </InputGroup>
           
-          <InputGroup>
+          <InputGroup error={errors.password}>
             <InputIcon>
               <FaLock />
             </InputIcon>
             <Input 
               type="password" 
+              name="password"
               placeholder="Password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              value={formData.password}
+              onChange={handleChange}
             />
+            {errors.password && <ErrorText>{errors.password}</ErrorText>}
           </InputGroup>
           
-          <InputGroup>
+          <InputGroup error={errors.confirmPassword}>
             <InputIcon>
               <FaLock />
             </InputIcon>
             <Input 
               type="password" 
+              name="confirmPassword"
               placeholder="Confirm Password" 
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
+              value={formData.confirmPassword}
+              onChange={handleChange}
             />
+            {errors.confirmPassword && <ErrorText>{errors.confirmPassword}</ErrorText>}
           </InputGroup>
           
           <Terms>
-            <Checkbox type="checkbox" id="terms" required />
+            <Checkbox 
+              type="checkbox" 
+              id="terms" 
+              name="agreeTerms"
+              checked={formData.agreeTerms}
+              onChange={handleChange}
+            />
             <Label htmlFor="terms">I agree to the <TermsLink href="#">Terms & Conditions</TermsLink></Label>
+            {errors.agreeTerms && <ErrorText>{errors.agreeTerms}</ErrorText>}
           </Terms>
           
-          <SubmitButton type="submit">Register</SubmitButton>
+          <SubmitButton type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Registering...' : 'Register'}
+          </SubmitButton>
           
           <Divider>or sign up with</Divider>
           
-          <GoogleButton type="button">
+          <GoogleButton type="button" onClick={handleGoogleSignUp}>
             <FaGoogle /> Sign up with Google
           </GoogleButton>
           
-        <LoginLink>
-  Already have an account? <Link to="/login">Login</Link>
-</LoginLink>
+          <LoginLink>
+            Already have an account? <Link to="/login">Login</Link>
+          </LoginLink>
         </AuthForm>
       </AuthCard>
-      
+      <ToastContainer position="bottom-right" autoClose={5000} />
       <Footer>©2025 Book Store. All rights reserved.</Footer>
     </AuthContainer>
+
   );
 };
 
-// ✅ Styled Components
-
-const AuthContainer = styled.div`
-  min-height: 100vh;
-  background: #f4f6f8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+// Additional styled component for error messages
+const ErrorText = styled.span`
+  color: #e74c3c;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
 `;
 
-const AuthCard = styled.div`
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 420px;
-`;
-
-const UserIcon = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-  color: #3498db;
-`;
-
-const AuthTitle = styled.h2`
-  text-align: center;
-  font-size: 1.5rem;
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
-`;
-
-const AuthForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
+// Update InputGroup to show error state
 const InputGroup = styled.div`
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   background: #ecf0f1;
   border-radius: 6px;
   padding: 0.5rem 1rem;
+  border: ${props => props.error ? '1px solid #e74c3c' : '1px solid transparent'};
 `;
 
-const InputIcon = styled.div`
-  color: #7f8c8d;
-  margin-right: 0.5rem;
-`;
-
-const Input = styled.input`
-  border: none;
-  background: transparent;
-  outline: none;
-  flex: 1;
-  font-size: 1rem;
-`;
-
-const Checkbox = styled.input`
-  margin-right: 0.5rem;
-`;
-
-const Label = styled.label`
-  font-size: 0.9rem;
-  color: #7f8c8d;
-`;
-
-const Terms = styled.div`
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  margin: 0.5rem 0;
-`;
-
-const TermsLink = styled.a`
-  color: #3498db;
-  text-decoration: none;
-  margin-left: 4px;
-  transition: color 0.3s ease;
-  
-  &:hover {
-    color: #2980b9;
-    text-decoration: underline;
-  }
-`;
-
-const SubmitButton = styled.button`
-  padding: 0.8rem;
-  background: #3498db;
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  
-  &:hover {
-    background: #2980b9;
-  }
-`;
-
-const Divider = styled.div`
-  text-align: center;
-  color: #bdc3c7;
-  font-size: 0.9rem;
-`;
-
-const GoogleButton = styled.button`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem;
-  border: 1px solid #dcdde1;
-  background: white;
-  border-radius: 6px;
-  color: #2c3e50;
-  cursor: pointer;
-  transition: box-shadow 0.3s ease;
-  
-  &:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-`;
-
-const LoginLink = styled.div`
-  margin-top: 1rem;
-  color: #7f8c8d;
-  font-size: 0.9rem;
-  text-align: center;
-  
-  a {
-    color: #3498db;
-    text-decoration: none;
-    font-weight: 500;
-    
-    &:hover {
-      color: #2980b9;
-      text-decoration: underline;
-    }
-  }
-`;
-
-const Footer = styled.footer`
-  margin-top: 2rem;
-  color: #95a5a6;
-  font-size: 0.8rem;
-`;
+// ... (keep all your other styled components the same)
 
 export default Register;

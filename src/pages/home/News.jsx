@@ -20,7 +20,7 @@ const News = () => {
       id: 2,
       title: 'Breakthrough in AI Technology Announced',
       description: 'A major breakthrough in artificial intelligence has been announced by researchers, with new advancements promising to revolutionize industries from healthcare to finance.',
-      image: 'https://images.unsplash.com/photo-1677442135136-760c813cd6d0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
+      image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
       date: 'June 2, 2023'
     },
     {

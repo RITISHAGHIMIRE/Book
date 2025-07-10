@@ -1,7 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
-import styled from 'styled-components';
+import React, { useRef, useState } from 'react';
 import { FaChevronLeft, FaChevronRight, FaCartPlus, FaHeart, FaRegHeart } from 'react-icons/fa';
 import { RiStarFill, RiStarHalfFill, RiStarLine } from 'react-icons/ri';
+import { motion } from 'framer-motion';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../../redux/features/cart/cartSlice';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { Link } from 'react-router-dom';
 
 const Recommended = () => {
   const sliderRef = useRef(null);
@@ -9,6 +14,7 @@ const Recommended = () => {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [wishlist, setWishlist] = useState([]);
+  const dispatch = useDispatch();
 
   const recommendedBooks = [
     {
@@ -73,20 +79,14 @@ const Recommended = () => {
     }
   ];
 
-  // Mouse events for slider dragging
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setStartX(e.pageX - sliderRef.current.offsetLeft);
     setScrollLeft(sliderRef.current.scrollLeft);
   };
 
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
@@ -96,374 +96,143 @@ const Recommended = () => {
     sliderRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  // Touch events for mobile
-  const handleTouchStart = (e) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - sliderRef.current.offsetLeft);
-    setScrollLeft(sliderRef.current.scrollLeft);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    const x = e.touches[0].pageX - sliderRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    sliderRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
   const scrollLeftHandler = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({
-        left: -300,
-        behavior: 'smooth'
-      });
-    }
+    sliderRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
   };
 
   const scrollRightHandler = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({
-        left: 300,
-        behavior: 'smooth'
-      });
-    }
+    sliderRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
   };
 
   const toggleWishlist = (bookId) => {
-    if (wishlist.includes(bookId)) {
-      setWishlist(wishlist.filter(id => id !== bookId));
-    } else {
-      setWishlist([...wishlist, bookId]);
-    }
+    setWishlist(prev => 
+      prev.includes(bookId) 
+        ? prev.filter(id => id !== bookId) 
+        : [...prev, bookId]
+    );
+  };
+
+  const handleAddToCart = (book) => {
+    dispatch(addToCart({ ...book, quantity: 1 }));
+    toast.success(`${book.title} added to cart!`, {
+      position: "bottom-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
   };
 
   const renderRatingStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 1; i <= 5; i++) {
-      if (i <= fullStars) {
-        stars.push(<RiStarFill key={i} />);
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        stars.push(<RiStarHalfFill key={i} />);
-      } else {
-        stars.push(<RiStarLine key={i} />);
+    return Array.from({ length: 5 }).map((_, i) => {
+      if (i < Math.floor(rating)) {
+        return <RiStarFill key={i} className="text-yellow-400" />;
       }
-    }
-
-    return stars;
+      if (i === Math.floor(rating) && rating % 1 >= 0.5) {
+        return <RiStarHalfFill key={i} className="text-yellow-400" />;
+      }
+      return <RiStarLine key={i} className="text-yellow-400" />;
+    });
   };
 
   return (
-    <RecommendationContainer>
-      <SectionHeader>
-        <h2>Recommended for you</h2>
-        <ViewAllLink>View all</ViewAllLink>
-      </SectionHeader>
+    <section className="p-8 my-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-md">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h2 className="text-2xl font-bold text-gray-800">Recommended for you</h2>
+        <button className="text-[#3498db] font-semibold hover:text-sky-500 hover:underline transition-colors">
+          View all
+        </button>
+      </div>
       
-      <SliderContainer>
-        <ScrollButton left onClick={scrollLeftHandler}>
-          <FaChevronLeft />
-        </ScrollButton>
+      <div className="relative">
+        <button 
+          onClick={scrollLeftHandler}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-[#3498db] hover:text-white transition-all hidden md:flex items-center justify-center"
+        >
+          <FaChevronLeft className="text-lg" />
+        </button>
         
-        <BookSlider
+        <div
           ref={sliderRef}
           onMouseDown={handleMouseDown}
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          isDragging={isDragging}
+          className={`flex gap-6 py-4 overflow-x-auto scroll-smooth ${
+            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+          } scrollbar-hide`}
         >
           {recommendedBooks.map(book => (
-            <BookCard key={book.id}>
-              <BookImageContainer>
-                <BookImage src={book.image} alt={book.title} />
-                <WishlistButton 
+            <motion.div 
+              key={book.id}
+              whileHover={{ y: -5 }}
+              className="min-w-[280px] bg-white rounded-xl shadow-md overflow-hidden transition-shadow hover:shadow-lg flex flex-col"
+            >
+              <div className="relative h-48 overflow-hidden">
+              <Link to={`/recommended-book/${book.id}`} className="block">
+                <img 
+                  src={book.image} 
+                  alt={book.title} 
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                />
+                </Link>
+                <button
                   onClick={() => toggleWishlist(book.id)}
+                  className="absolute top-3 right-3 bg-white/80 rounded-full p-2 hover:bg-white hover:text-red-500 transition-all"
                   aria-label={wishlist.includes(book.id) ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  {wishlist.includes(book.id) ? <FaHeart /> : <FaRegHeart />}
-                </WishlistButton>
-            <DiscountBadge>
-  {Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100)}% OFF
-</DiscountBadge>
-              </BookImageContainer>
-              <BookInfo>
-                <BookTitle>{book.title}</BookTitle>
-                <BookDescription>{book.description}</BookDescription>
+                  {wishlist.includes(book.id) ? 
+                    <FaHeart className="text-red-500" /> : 
+                    <FaRegHeart className="text-gray-600" />
+                  }
+                </button>
+                <span className="absolute bottom-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                  {Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100)}% OFF
+                </span>
+              </div>
+              
+              <div className="p-5 flex flex-col flex-grow">
+                <h3 className="text-lg font-bold text-gray-800 mb-2 truncate">{book.title}</h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">{book.description}</p>
                 
-                <RatingContainer>
-                  <Stars>{renderRatingStars(book.rating)}</Stars>
-                  <RatingText>{book.rating} ({book.reviews.toLocaleString()} reviews)</RatingText>
-                </RatingContainer>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex text-yellow-400">
+                    {renderRatingStars(book.rating)}
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {book.rating} ({book.reviews.toLocaleString()} reviews)
+                  </span>
+                </div>
                 
-                <PriceContainer>
-                  <CurrentPrice>${book.price.toFixed(2)}</CurrentPrice>
-                  <OriginalPrice>${book.originalPrice.toFixed(2)}</OriginalPrice>
-                </PriceContainer>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-xl font-bold text-gray-800">${book.price.toFixed(2)}</span>
+                  <span className="text-sm text-gray-400 line-through">${book.originalPrice.toFixed(2)}</span>
+                </div>
                 
-                <AddToCartButton>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleAddToCart(book)}
+                  className="w-full py-2 bg-[#3498db] text-white rounded-md flex items-center justify-center gap-2 font-semibold hover:bg-sky-500 transition-colors"
+                >
                   <FaCartPlus /> Add to Cart
-                </AddToCartButton>
-              </BookInfo>
-            </BookCard>
+                </motion.button>
+              </div>
+            </motion.div>
           ))}
-        </BookSlider>
+        </div>
         
-        <ScrollButton right onClick={scrollRightHandler}>
-          <FaChevronRight />
-        </ScrollButton>
-      </SliderContainer>
-    </RecommendationContainer>
+        <button 
+          onClick={scrollRightHandler}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-[#3498db] hover:text-white transition-all hidden md:flex items-center justify-center"
+        >
+          <FaChevronRight className="text-lg" />
+        </button>
+      </div>
+    </section>
   );
 };
-
-// Styled Components
-const RecommendationContainer = styled.section`
-  padding: 2rem;
-  margin: 3rem 0;
-`;
-
-const SectionHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  
-  h2 {
-    font-size: 1.8rem;
-    color: #2c3e50;
-    margin: 0;
-    font-weight: 700;
-  }
-`;
-
-const ViewAllLink = styled.a`
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.3s ease;
-  
-  &:hover {
-    color: #2980b9;
-    text-decoration: underline;
-  }
-`;
-
-const SliderContainer = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-`;
-
-const ScrollButton = styled.button`
-  position: absolute;
-  background: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-  z-index: 10;
-  left: ${props => props.left ? '-20px' : 'auto'};
-  right: ${props => props.right ? '-20px' : 'auto'};
-  transition: all 0.3s ease;
-  color: #2c3e50;
-  
-  &:hover {
-    background: #3498db;
-    color: white;
-    transform: scale(1.1);
-  }
-  
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const BookSlider = styled.div`
-  display: flex;
-  gap: 1.5rem;
-  padding: 1rem 0;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  cursor: ${props => props.isDragging ? 'grabbing' : 'grab'};
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-const BookCard = styled.div`
-  min-width: 280px;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  position: relative;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-  }
-`;
-
-const BookImageContainer = styled.div`
-  position: relative;
-  height: 200px;
-  overflow: hidden;
-`;
-
-const BookImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-  
-  ${BookCard}:hover & {
-    transform: scale(1.05);
-  }
-`;
-
-const WishlistButton = styled.button`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: ${props => props.active ? '#e74c3c' : '#7f8c8d'};
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: white;
-    color: #e74c3c;
-    transform: scale(1.1);
-  }
-  
-  svg {
-    font-size: 1.1rem;
-  }
-`;
-
-const DiscountBadge = styled.span`
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: #e74c3c;
-  color: white;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-`;
-
-const BookInfo = styled.div`
-  padding: 1.5rem;
-`;
-
-const BookTitle = styled.h3`
-  font-size: 1.1rem;
-  margin: 0 0 0.8rem 0;
-  color: #2c3e50;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const BookDescription = styled.p`
-  font-size: 0.9rem;
-  color: #7f8c8d;
-  margin: 0 0 1.2rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.4;
-`;
-
-const RatingContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-`;
-
-const Stars = styled.div`
-  display: flex;
-  color: #f39c12;
-  font-size: 1rem;
-`;
-
-const RatingText = styled.span`
-  font-size: 0.8rem;
-  color: #95a5a6;
-`;
-
-const PriceContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 1.2rem;
-`;
-
-const CurrentPrice = styled.span`
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #2c3e50;
-`;
-
-const OriginalPrice = styled.span`
-  font-size: 0.9rem;
-  color: #95a5a6;
-  text-decoration: line-through;
-`;
-
-const AddToCartButton = styled.button`
-  width: 100%;
-  padding: 0.7rem;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: #2980b9;
-    transform: translateY(-2px);
-  }
-  
-  svg {
-    font-size: 1rem;
-  }
-`;
 
 export default Recommended;

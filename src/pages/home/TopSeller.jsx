@@ -1,396 +1,197 @@
-import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
-import { FaChevronLeft, FaChevronRight, FaCartPlus } from 'react-icons/fa';
-import { HiOutlineClipboardDocumentList } from 'react-icons/hi2';
-import { useDispatch } from 'react-redux';
-import { addToCart } from '../../redux/features/cart/cartSlice';
+import React, { useState, useRef } from "react";
+import { FaChevronLeft, FaChevronRight, FaCartPlus } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../../redux/features/cart/cartSlice";
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const TopSeller = () => {
-  const dispatch= useDispatch();
-
-  const handleAddToCart =(product)=>{
-dispatch(addToCart(product))
-  } 
-  const [activeGenre, setActiveGenre] = useState('All');
+  const dispatch = useDispatch();
+  const [activeGenre, setActiveGenre] = useState("All");
   const sliderRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
 
-  const genres = ['All', 'Fiction', 'Non-Fiction', 'Business', 'Self-Help', 'Technology'];
+  const genres = [
+    "All",
+    "Fiction",
+    "Non-Fiction",
+    "Business",
+    "Self-Help",
+    "Technology",
+  ];
 
   const books = [
     {
       id: 1,
-      title: 'How to Grow Your Online Store',
-      description: 'Learn the best strategies to grow your online store in today\'s competitive market.',
+      title: "How to Grow Your Online Store",
+      description:
+        "Learn the best strategies to grow your online store in today's competitive market.",
       price: 19.99,
       originalPrice: 29.99,
-      genre: 'Business',
-      image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      genre: "Business",
+      image:
+        "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
     },
     {
       id: 2,
-      title: 'To Kill a Mockingbird',
-      description: 'A classic novel about racial injustice and moral growth in the American South.',
+      title: "To Kill a Mockingbird",
+      description:
+        "A classic novel about racial injustice and moral growth in the American South.",
       price: 12.99,
       originalPrice: 18.99,
-      genre: 'Fiction',
-      image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      genre: "Fiction",
+      image:
+        "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
     },
     {
       id: 3,
-      title: 'Top 10 Fiction Books This Year',
-      description: 'A curated list of the best fiction books that are trending this year.',
+      title: "Top 10 Fiction Books This Year",
+      description:
+        "A curated list of the best fiction books that are trending this year.",
       price: 14.99,
       originalPrice: 24.99,
-      genre: 'Fiction',
-      image: 'https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      genre: "Fiction",
+      image:
+        "https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
     },
     {
       id: 4,
-      title: 'Mastering SEO in 2024',
-      description: 'Tips and tricks to boost your SEO and rank higher on search engines.',
+      title: "Mastering SEO in 2024",
+      description:
+        "Tips and tricks to boost your SEO and rank higher on search engines.",
       price: 29.99,
       originalPrice: 39.99,
-      genre: 'Technology',
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      genre: "Technology",
+      image:
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
     },
     {
       id: 5,
-      title: 'The Future of Dorian Gray',
-      description: 'A modern retelling of the classic with a futuristic twist.',
+      title: "The Future of Dorian Gray",
+      description: "A modern retelling of the classic with a futuristic twist.",
       price: 16.99,
       originalPrice: 22.99,
-      genre: 'Fiction',
-      image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      genre: "Fiction",
+      image:
+        "https://images.unsplash.com/photo-1531346878377-a5be20888e57?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
     },
     {
       id: 6,
-      title: 'Atomic Habits',
-      description: 'Tiny changes, remarkable results - build good habits and break bad ones.',
+      title: "Atomic Habits",
+      description:
+        "Tiny changes, remarkable results - build good habits and break bad ones.",
       price: 15.99,
       originalPrice: 25.99,
-      genre: 'Self-Help',
-      image: 'https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
-    }
+      genre: "Self-Help",
+      image:
+        "https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+    },
   ];
 
-  const filteredBooks = activeGenre === 'All' 
-    ? books 
-    : books.filter(book => book.genre === activeGenre);
+  const filteredBooks =
+    activeGenre === "All"
+      ? books
+      : books.filter((book) => book.genre === activeGenre);
 
-  // Mouse events for slider dragging
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartX(e.pageX - sliderRef.current.offsetLeft);
-    setScrollLeft(sliderRef.current.scrollLeft);
+  const handleAddToCart = (product) => {
+    dispatch(addToCart({ ...product, quantity: 1 }));
+    toast.success(`${product.title} added to cart!`, {
+      position: "bottom-right",
+      autoClose: 2000,
+      hideProgressBar: true,
+    });
   };
 
-  const handleMouseLeave = () => {
-    setIsDragging(false);
+  const scrollLeft = () => {
+    sliderRef.current?.scrollBy({ left: -300, behavior: "smooth" });
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - sliderRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    sliderRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  // Touch events for mobile
-  const handleTouchStart = (e) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - sliderRef.current.offsetLeft);
-    setScrollLeft(sliderRef.current.scrollLeft);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    const x = e.touches[0].pageX - sliderRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    sliderRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  // Auto-scroll functionality
-  useEffect(() => {
-    const slider = sliderRef.current;
-    let scrollAmount = 0;
-    let scrollDirection = 1;
-    const slideTimer = setInterval(() => {
-      if (slider) {
-        slider.scrollLeft += scrollDirection;
-        scrollAmount += 1;
-        
-        if (scrollAmount >= 200 || slider.scrollLeft >= (slider.scrollWidth - slider.clientWidth - 1)) {
-          scrollDirection = -1;
-        } else if (scrollAmount <= 0 || slider.scrollLeft <= 1) {
-          scrollDirection = 1;
-        }
-      }
-    }, 20);
-
-    return () => clearInterval(slideTimer);
-  }, []);
-
-  const scrollLeftHandler = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({
-        left: -300,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const scrollRightHandler = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({
-        left: 300,
-        behavior: 'smooth'
-      });
-    }
+  const scrollRight = () => {
+    sliderRef.current?.scrollBy({ left: 300, behavior: "smooth" });
   };
 
   return (
-    <TopSellerContainer>
-      <Header>
-        <h2>Top Sellers</h2>
-        <GenreSelector>
-          {genres.map(genre => (
-            <GenreButton 
-              key={genre} 
-              active={activeGenre === genre}
+    <section className="p-8 bg-gradient-to-br from-gray-50 to-gray-200 rounded-xl shadow-lg my-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h2 className="text-2xl font-bold text-gray-800">Top Sellers</h2>
+        <div className="flex flex-wrap gap-2">
+          {genres.map((genre) => (
+            <button
+              key={genre}
+              className={`px-4 py-2 rounded-full transition-all ${
+                activeGenre === genre
+                  ? "bg-[#3498db] text-white font-semibold"
+                  : "bg-gray-100 text-gray-600 font-medium hover:bg-gray-200"
+              }`}
               onClick={() => setActiveGenre(genre)}
             >
               {genre}
-            </GenreButton>
+            </button>
           ))}
-        </GenreSelector>
-      </Header>
-      
-      <SliderContainer>
-        <ScrollButton left onClick={scrollLeftHandler}>
-          <FaChevronLeft />
-        </ScrollButton>
-        
-        <BookSlider
+        </div>
+      </div>
+
+      <div className="relative">
+        <div
+          className="flex overflow-x-auto scrollbar-hide gap-6 py-4"
           ref={sliderRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
-          {filteredBooks.map(book => (
-            <BookCard key={book.id}>
-              <BookImage src={book.image} alt={book.title} />
-              <BookInfo>
-                <BookTitle>{book.title}</BookTitle>
-                <BookDescription>{book.description}</BookDescription>
-                <PriceContainer>
-                  <CurrentPrice>${book.price.toFixed(2)}</CurrentPrice>
-                  <OriginalPrice>${book.originalPrice.toFixed(2)}</OriginalPrice>
-                </PriceContainer>
-                <AddToCartButton onClick={()=>handleAddToCart(book)}>
+          {filteredBooks.map((book) => (
+            <motion.div
+              key={book.id}
+              whileHover={{ y: -5 }}
+              className="min-w-[280px] bg-white rounded-xl shadow-md overflow-hidden transition-shadow hover:shadow-lg flex flex-col"
+            >
+              <Link to={`/book/${book.id}`} className="block">
+                <img
+                  src={book.image}
+                  alt={book.title}
+                  className="w-full h-48 object-cover"
+                />
+              
+              </Link>
+              <div className="p-5 flex flex-col flex-grow">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  {book.title}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
+                  {book.description}
+                </p>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-xl font-bold text-red-500">
+                    ${book.price.toFixed(2)}
+                  </span>
+                  <span className="text-sm text-gray-500 line-through">
+                    ${book.originalPrice.toFixed(2)}
+                  </span>
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleAddToCart(book)}
+                  className="w-full py-2 bg-[#3498db] text-white rounded-md flex items-center justify-center gap-2 font-semibold hover:bg-sky-500 transition-colors mt-auto"
+                >
                   <FaCartPlus /> Add to Cart
-                </AddToCartButton>
-              </BookInfo>
-            </BookCard>
+                </motion.button>
+              </div>
+            </motion.div>
           ))}
-        </BookSlider>
-        
-        <ScrollButton right onClick={scrollRightHandler}>
+        </div>
+
+        <button
+          onClick={scrollLeft}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 shadow-md hover:bg-[#3498db] hover:text-white hover:scale-110 transition-all hidden md:block"
+        >
+          <FaChevronLeft />
+        </button>
+        <button
+          onClick={scrollRight}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 rounded-full p-2 shadow-md hover:bg-[#3498db] hover:text-white hover:scale-110 transition-all hidden md:block"
+        >
           <FaChevronRight />
-        </ScrollButton>
-      </SliderContainer>
-    </TopSellerContainer>
+        </button>
+      </div>
+    </section>
   );
 };
-
-// Styled Components
-const TopSellerContainer = styled.section`
-  padding: 2rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 15px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  margin: 2rem 0;
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  
-  h2 {
-    font-size: 1.8rem;
-    color: #2c3e50;
-    margin: 0;
-  }
-`;
-
-const GenreSelector = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const GenreButton = styled.button`
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 20px;
-  background: ${props => props.active ? '#3498db' : '#ecf0f1'};
-  color: ${props => props.active ? 'white' : '#7f8c8d'};
-  cursor: pointer;
-  font-weight: ${props => props.active ? '600' : '500'};
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: ${props => props.active ? '#2980b9' : '#dfe6e9'};
-  }
-`;
-
-const SliderContainer = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-`;
-
-const ScrollButton = styled.button`
-  position: absolute;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  z-index: 10;
-  left: ${props => props.left ? '10px' : 'auto'};
-  right: ${props => props.right ? '10px' : 'auto'};
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: white;
-    transform: scale(1.1);
-  }
-  
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const BookSlider = styled.div`
-  display: flex;
-  gap: 1.5rem;
-  padding: 1rem 0;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  cursor: grab;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  
-  &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
-  
-  ${props => props.isDragging && `
-    cursor: grabbing;
-    scroll-behavior: auto;
-    user-select: none;
-  `}
-`;
-
-const BookCard = styled.div`
-  min-width: 280px;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  }
-`;
-
-const BookImage = styled.img`
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-`;
-
-const BookInfo = styled.div`
-  padding: 1.2rem;
-`;
-
-const BookTitle = styled.h3`
-  font-size: 1.1rem;
-  margin: 0 0 0.5rem 0;
-  color: #2c3e50;
-`;
-
-const BookDescription = styled.p`
-  font-size: 0.9rem;
-  color: #7f8c8d;
-  margin: 0 0 1rem 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-`;
-
-const PriceContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 1rem;
-`;
-
-const CurrentPrice = styled.span`
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #e74c3c;
-`;
-
-const OriginalPrice = styled.span`
-  font-size: 0.9rem;
-  color: #95a5a6;
-  text-decoration: line-through;
-`;
-
-const AddToCartButton = styled.button`
-  width: 100%;
-  padding: 0.6rem;
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: background 0.3s ease;
-  
-  &:hover {
-    background: #2980b9;
-  }
-`;
 
 export default TopSeller;
