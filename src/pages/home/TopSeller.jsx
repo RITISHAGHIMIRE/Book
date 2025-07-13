@@ -111,7 +111,7 @@ const TopSeller = () => {
   };
 
   return (
-    <section className="p-8 bg-gradient-to-br from-gray-50 to-gray-200 rounded-xl shadow-lg my-8">
+    <section className="p-8 bg-gradient-to-br from-gray-50 to-gray-200 rounded-xl bg-black shadow-lg my-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Top Sellers</h2>
         <div className="flex flex-wrap gap-2">
@@ -120,7 +120,7 @@ const TopSeller = () => {
               key={genre}
               className={`px-4 py-2 rounded-full transition-all ${
                 activeGenre === genre
-                  ? "bg-[#3498db] text-white font-semibold"
+                  ? "bg-black text-white font-semibold"
                   : "bg-gray-100 text-gray-600 font-medium hover:bg-gray-200"
               }`}
               onClick={() => setActiveGenre(genre)}
@@ -168,7 +168,7 @@ const TopSeller = () => {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleAddToCart(book)}
-                  className="w-full py-2 bg-[#3498db] text-white rounded-md flex items-center justify-center gap-2 font-semibold hover:bg-sky-500 transition-colors mt-auto"
+                  className="w-full py-2 bg-amber-700 text-white rounded-md flex items-center justify-center gap-2 font-semibold hover:bg-sky-500 transition-colors mt-auto"
                 >
                   <FaCartPlus /> Add to Cart
                 </motion.button>

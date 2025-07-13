@@ -9,6 +9,9 @@ import SingleRecommendation from "./pages/home/SingleRecommendation";
 import CartPage from "./pages/books/CartPage";
 import CheckoutPage from "./pages/books/CheckoutPage";
 import BookDiscoveryDashboard from "./components/BookDiscoveryDashboard ";
+import Dashboard from "./pages/Dashboard";
+import AboutUs from "./pages/home/AboutUs";
+import ContactUs from "./pages/home/ContactUs";
 
 function App() {
   return (
@@ -22,6 +25,9 @@ function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/dash" element={<BookDiscoveryDashboard/>}/>
+        <Route path="/dashboard" element={<Dashboard/>}/>
+        <Route path="/about" element={<AboutUs/>} />
+      <Route path="/contact" element={<ContactUs/>} />
 
 
 
