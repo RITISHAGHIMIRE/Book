@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { HiBars3BottomLeft, HiOutlineUser, HiOutlineShoppingCart, HiOutlineXMark } from "react-icons/hi2";
 import { FaSearch, FaRegHeart } from "react-icons/fa";
 import { useSelector } from "react-redux";
@@ -7,18 +7,71 @@ import { motion, AnimatePresence } from "framer-motion";
 import Img from "../assets/book/photo_6302827029451621507_x.jpg";
 import backgroundImage from "../assets/book/backgroundImage.jpg";
 
+// Mock data for books (replace with your actual data source)
+const mockBooks = [
+  { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", genre: "Classic", category: "Fiction" },
+  { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", genre: "Classic", category: "Fiction" },
+  { id: 3, title: "1984", author: "George Orwell", genre: "Dystopian", category: "Fiction" },
+  { id: 4, title: "Atomic Habits", author: "James Clear", genre: "Self-Help", category: "Non-Fiction" },
+  { id: 5, title: "Dune", author: "Frank Herbert", genre: "Science Fiction", category: "Fiction" },
+  { id: 6, title: "The Hobbit", author: "J.R.R. Tolkien", genre: "Fantasy", category: "Fiction" },
+  { id: 7, title: "Sapiens", author: "Yuval Noah Harari", genre: "History", category: "Non-Fiction" },
+];
+
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
   const currentUser = false;
   const cartItems = useSelector(state => state.cart.cartItems);
   const [cartCount, setCartCount] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const totalItems = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
     setCartCount(totalItems);
   }, [cartItems]);
+
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      const results = searchBooks(searchQuery);
+      setSearchResults(results);
+      setShowResults(true);
+    } else {
+      setSearchResults([]);
+      setShowResults(false);
+    }
+  }, [searchQuery]);
+
+  const searchBooks = (query) => {
+    const lowerCaseQuery = query.toLowerCase();
+    
+    return mockBooks.filter(book => {
+      return (
+        book.title.toLowerCase().includes(lowerCaseQuery) ||
+        book.author.toLowerCase().includes(lowerCaseQuery) ||
+        book.genre.toLowerCase().includes(lowerCaseQuery) ||
+        book.category.toLowerCase().includes(lowerCaseQuery)
+      );
+    });
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+      setShowResults(false);
+      setIsSearchExpanded(false);
+    }
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -26,6 +79,10 @@ const Navbar = () => {
 
   const toggleSearch = () => {
     setIsSearchExpanded(!isSearchExpanded);
+    if (!isSearchExpanded) {
+      setSearchQuery("");
+      setShowResults(false);
+    }
   };
 
   const navLinks = [
@@ -87,12 +144,49 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {/* Search - Desktop */}
             <div className="hidden md:flex items-center relative">
-              <FaSearch className="absolute left-3 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search books..."
-                className="bg-white w-64 py-2 pl-10 pr-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-300"
-              />
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search books, authors, genres..."
+                  className="bg-white w-64 py-2 pl-10 pr-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-300"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={() => setShowResults(true)}
+                  onBlur={() => setTimeout(() => setShowResults(false), 200)}
+                />
+                {showResults && searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 mt-1 w-full bg-white shadow-lg rounded-md z-50 max-h-96 overflow-y-auto"
+                  >
+                    <ul className="py-2">
+                      {searchResults.map((book) => (
+                        <motion.li
+                          key={book.id}
+                          whileHover={{ backgroundColor: "#f3f4f6" }}
+                          className="px-4 py-2 border-b border-gray-100 last:border-b-0"
+                        >
+                          <Link 
+                            to={`/book/${book.id}`} 
+                            className="block w-full"
+                            onClick={() => {
+                              setSearchQuery("");
+                              setShowResults(false);
+                            }}
+                          >
+                            <div className="font-medium text-gray-800">{book.title}</div>
+                            <div className="text-sm text-gray-600">by {book.author}</div>
+                            <div className="text-xs text-gray-500">{book.genre} • {book.category}</div>
+                          </Link>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
+              </form>
             </div>
 
             {/* Search - Mobile (Expandable) */}
@@ -102,14 +196,51 @@ const Navbar = () => {
                   initial={{ width: 0 }}
                   animate={{ width: 180 }}
                   exit={{ width: 0 }}
-                  className="relative overflow-hidden"
+                  className="relative"
                 >
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="bg-white w-full py-1 pl-10 pr-2 rounded-full focus:outline-none border border-gray-300"
-                  />
+                  <form onSubmit={handleSearchSubmit}>
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="bg-white w-full py-1 pl-10 pr-2 rounded-full focus:outline-none border border-gray-300"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      onFocus={() => setShowResults(true)}
+                      onBlur={() => setTimeout(() => setShowResults(false), 200)}
+                    />
+                    {showResults && searchResults.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute top-full left-0 mt-1 w-full bg-white shadow-lg rounded-md z-50 max-h-60 overflow-y-auto"
+                      >
+                        <ul className="py-2">
+                          {searchResults.slice(0, 3).map((book) => (
+                            <motion.li
+                              key={book.id}
+                              whileHover={{ backgroundColor: "#f3f4f6" }}
+                              className="px-3 py-2 border-b border-gray-100 last:border-b-0"
+                            >
+                              <Link 
+                                to={`/book/${book.id}`} 
+                                className="block w-full"
+                                onClick={() => {
+                                  setSearchQuery("");
+                                  setShowResults(false);
+                                  setIsSearchExpanded(false);
+                                }}
+                              >
+                                <div className="font-medium text-gray-800 text-sm">{book.title}</div>
+                                <div className="text-xs text-gray-600">by {book.author}</div>
+                              </Link>
+                            </motion.li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    )}
+                  </form>
                 </motion.div>
               ) : (
                 <button onClick={toggleSearch} className="focus:outline-none">
@@ -254,7 +385,42 @@ const Navbar = () => {
                         type="text"
                         placeholder="Search books..."
                         className="bg-gray-100 w-full py-2 pl-10 pr-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        onFocus={() => setShowResults(true)}
+                        onBlur={() => setTimeout(() => setShowResults(false), 200)}
                       />
+                      {showResults && searchResults.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute top-full left-0 mt-1 w-full bg-white shadow-lg rounded-md z-50 max-h-60 overflow-y-auto"
+                        >
+                          <ul className="py-2">
+                            {searchResults.slice(0, 3).map((book) => (
+                              <motion.li
+                                key={book.id}
+                                whileHover={{ backgroundColor: "#f3f4f6" }}
+                                className="px-3 py-2 border-b border-gray-100 last:border-b-0"
+                              >
+                                <Link 
+                                  to={`/book/${book.id}`} 
+                                  className="block w-full"
+                                  onClick={() => {
+                                    setSearchQuery("");
+                                    setShowResults(false);
+                                    toggleMobileMenu();
+                                  }}
+                                >
+                                  <div className="font-medium text-gray-800 text-sm">{book.title}</div>
+                                  <div className="text-xs text-gray-600">by {book.author}</div>
+                                </Link>
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </motion.div>
+                      )}
                     </div>
                   </li>
                 )}
